@@ -2,38 +2,100 @@ name: miEPG
 
 on:
   schedule:
-    - cron: '30 12 * * * ' # Ejecutar a las 13:30 AM (ten en cuenta el horario verano/invierno)
+    # GitHub Actions interpreta el horario cron en UTC.
+    # 11:30 UTC = 13:30 en horario de verano peninsular.
+    # 11:30 UTC = 12:30 en horario de invierno peninsular.
+    - cron: '30 11 * * *'
+
+  # Permite ejecutar el workflow manualmente desde la pestaña Actions.
   workflow_dispatch:
+
+# Permiso necesario para actualizar los archivos del repositorio.
 permissions:
-   contents: write
+  contents: write
+
+# Evita que dos ejecuciones modifiquen simultáneamente
+# miEPG.xml y epg_acumulado.xml.
+concurrency:
+  group: miepg-generator
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Generar miEPG
     runs-on: ubuntu-latest
 
+    # Evita que una descarga bloqueada mantenga el workflow activo indefinidamente.
+    timeout-minutes: 30
+
     steps:
-    - name: Checkout del repositorio
-      uses: actions/checkout@v2
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
 
-    - name: Comprobar e Instalar xmllint
-      run: |
-        sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Instalar dependencias
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxml2-utils
 
-    - name: Dar permisos de ejecución al script
-      run: |
-        chmod +x .github/workflows/EPG_script.sh
+      - name: Dar permisos de ejecución al script
+        shell: bash
+        run: |
+          chmod +x .github/workflows/EPG_script.sh
 
-    - name: Ejecutar script
-      run: .github/workflows/EPG_script.sh
+      - name: Ejecutar generador miEPG
+        shell: bash
+        run: |
+          .github/workflows/EPG_script.sh
 
-    - name: Configurar identidad de Git
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        
-    - name: Subir archivos 
-      run: |
-        git add .
-        git commit -m "Nuevo miEPG.xml"
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Comprobar archivos generados
+        shell: bash
+        run: |
+          if [ ! -s miEPG.xml ]; then
+            echo "ERROR: miEPG.xml no existe o está vacío."
+            exit 1
+          fi
+
+          if [ ! -s epg_acumulado.xml ]; then
+            echo "ERROR: epg_acumulado.xml no existe o está vacío."
+            exit 1
+          fi
+
+          echo "Validando miEPG.xml..."
+          xmllint --noout miEPG.xml
+
+          echo "Validando epg_acumulado.xml..."
+          xmllint --noout epg_acumulado.xml
+
+          echo "Archivos XML generados y validados correctamente."
+          echo "Tamaño de miEPG.xml: $(wc -c < miEPG.xml | xargs) bytes"
+          echo "Canales: $(grep -c '<channel ' miEPG.xml || true)"
+          echo "Programas: $(grep -c '<programme ' miEPG.xml || true)"
+
+      - name: Configurar identidad de Git
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Publicar archivos generados
+        shell: bash
+        run: |
+          git add miEPG.xml
+          git add epg_acumulado.xml
+
+          # Añadir los listados de canales si han sido generados.
+          if compgen -G "canales_epg*.txt" > /dev/null; then
+            git add canales_epg*.txt
+          fi
+
+          # Finalizar correctamente cuando no haya cambios.
+          if git diff --cached --quiet; then
+            echo "No hay cambios que publicar."
+            exit 0
+          fi
+
+          git commit -m "Actualizar miEPG.xml"
+          git push
