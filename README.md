@@ -1,4 +1,4 @@
-# miEPG v3.7
+# miEPG v3.8
 
 ## Descripción
 
