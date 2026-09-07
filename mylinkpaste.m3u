@@ -31,9 +31,9 @@ http://192.168.1.14:6878/ace/getstream?id=f9c6a0e04cb062098571c6cbaa6fa4b60cc7e0
 http://192.168.1.14:6878/ace/getstream?id=dddff67edfa7061f643ec5ae0be110169850363d
 #EXTINF:-1 tvg-id="DAZN 1" group-title="DAZN",DAZN 1 1080p **
 http://192.168.1.14:6878/ace/getstream?id=78124d96a1a4601e7910f50e36a16e35efcfb398
-#EXTINF:-1 tvg-id="LaLiga TV Hypermotion" group-title="HYPERMOTION",LaLiga TV Hypermotion 720p *
+#EXTINF:-1 tvg-id="LaLiga TV Hypermotion HD" group-title="HYPERMOTION",LaLiga TV Hypermotion 720p *
 http://192.168.1.14:6878/ace/getstream?id=1f75d92098580443857caa95a719103cb83781b0
-#EXTINF:-1 tvg-id="LaLiga TV Hypermotion" group-title="HYPERMOTION",LaLiga TV Hypermotion 720p **
+#EXTINF:-1 tvg-id="LaLiga TV Hypermotion HD" group-title="HYPERMOTION",LaLiga TV Hypermotion 720p **
 http://192.168.1.14:6878/ace/getstream?id=2c54a4def58f41fc0d2163450a63f12955b656aa
 #EXTINF:-1 tvg-id="LaLiga TV Hypermotion" group-title="HYPERMOTION",LaLiga TV Hypermotion 1080p *
 http://192.168.1.14:6878/ace/getstream?id=4636ed75106cb00e9c70cc2029edf0a4df7ad73f
